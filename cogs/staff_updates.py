@@ -149,8 +149,10 @@ class StaffUpdates(commands.Cog):
         color = discord.Color.from_rgb(230, 70, 45)
 
         # ---------- Mensaje en el canal (embed, con campos separados para que se vea mas largo) ----------
+        # El titulo grande va en la descripcion con "# " porque el campo title
+        # de un embed no interpreta markdown (el "#" se veria como texto plano ahi).
         embed = discord.Embed(
-            title="# 📣 STAFF UPDATE",
+            description="# 📣 STAFF UPDATE",
             color=color,
             timestamp=discord.utils.utcnow(),
         )
