@@ -35,6 +35,20 @@ def get_staff_channel(guild_id: int):
     return data.get(str(guild_id))
 
 
+def puede_gestionar_rol(actor: discord.Member, rank: discord.Role) -> bool:
+    """
+    Verifica si 'actor' tiene jerarquia suficiente para otorgar o retirar 'rank'.
+    El dueno del servidor y los administradores siempre pueden.
+    Cualquier otro usuario necesita que su rol mas alto este ESTRICTAMENTE por
+    encima del rol que intenta gestionar (no se permite igual ni menor).
+    """
+    if actor.id == actor.guild.owner_id:
+        return True
+    if actor.guild_permissions.administrator:
+        return True
+    return actor.top_role.position > rank.position
+
+
 class StaffUpdates(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -78,6 +92,14 @@ class StaffUpdates(commands.Cog):
         if channel is None:
             await interaction.response.send_message(
                 "El canal configurado ya no existe. Vuelve a configurarlo con /set-staff-channel.",
+                ephemeral=True,
+            )
+            return
+
+        if not puede_gestionar_rol(interaction.user, rank):
+            await interaction.response.send_message(
+                f"No puedes otorgar el rol {rank.mention} porque esta al mismo nivel o por "
+                "encima de tu rol mas alto. Solo puedes promover a rangos por debajo del tuyo.",
                 ephemeral=True,
             )
             return
@@ -158,6 +180,14 @@ class StaffUpdates(commands.Cog):
         if channel is None:
             await interaction.response.send_message(
                 "El canal configurado ya no existe. Vuelve a configurarlo con /set-staff-channel.",
+                ephemeral=True,
+            )
+            return
+
+        if not puede_gestionar_rol(interaction.user, rank):
+            await interaction.response.send_message(
+                f"No puedes retirar el rol {rank.mention} porque esta al mismo nivel o por "
+                "encima de tu rol mas alto. Solo puedes degradar rangos por debajo del tuyo.",
                 ephemeral=True,
             )
             return
