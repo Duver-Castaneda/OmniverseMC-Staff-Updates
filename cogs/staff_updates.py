@@ -61,10 +61,10 @@ class StaffUpdates(commands.Cog):
         else:
             raise error
 
-    @app_commands.command(name="promote", description="Anuncia que un usuario subio de cargo")
-    @app_commands.describe(user="Usuario que subio de cargo", rank="Nombre del nuevo cargo o rango")
+    @app_commands.command(name="promote", description="Anuncia que un usuario subio de cargo y le otorga el rol")
+    @app_commands.describe(user="Usuario que subio de cargo", rank="Rol del nuevo cargo (se le otorgara al usuario)")
     @app_commands.checks.has_permissions(manage_roles=True)
-    async def promote(self, interaction: discord.Interaction, user: discord.Member, rank: str):
+    async def promote(self, interaction: discord.Interaction, user: discord.Member, rank: discord.Role):
         channel_id = get_staff_channel(interaction.guild.id)
 
         if channel_id is None:
@@ -78,6 +78,16 @@ class StaffUpdates(commands.Cog):
         if channel is None:
             await interaction.response.send_message(
                 "El canal configurado ya no existe. Vuelve a configurarlo con /set-staff-channel.",
+                ephemeral=True,
+            )
+            return
+
+        try:
+            await user.add_roles(rank, reason=f"Ascenso aplicado por {interaction.user}")
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "No tengo permisos para otorgar ese rol. Verifica que mi rol este por encima de "
+                f"{rank.mention} en la jerarquia del servidor.",
                 ephemeral=True,
             )
             return
@@ -94,7 +104,7 @@ class StaffUpdates(commands.Cog):
         embed.set_author(name=str(user), icon_url=user.display_avatar.url)
         embed.set_thumbnail(url=user.display_avatar.url)
         embed.add_field(name="👤 Usuario", value=user.mention, inline=True)
-        embed.add_field(name="🏆 Nuevo cargo", value=f"**{rank}**", inline=True)
+        embed.add_field(name="🏆 Nuevo cargo", value=rank.mention, inline=True)
         embed.add_field(name="🛡️ Actualizado por", value=interaction.user.mention, inline=False)
         embed.set_footer(
             text=f"{interaction.guild.name} • Felicidades por el ascenso",
@@ -108,8 +118,18 @@ class StaffUpdates(commands.Cog):
         except discord.HTTPException:
             pass
 
+        try:
+            dm_embed = discord.Embed(
+                title="🎉 ¡Felicidades por tu ascenso!",
+                description=f"Has subido al cargo de {rank.mention} en **{interaction.guild.name}**.",
+                color=discord.Color.gold(),
+            )
+            await user.send(embed=dm_embed)
+        except discord.Forbidden:
+            pass
+
         await interaction.response.send_message(
-            f"Anuncio enviado en {channel.mention}.", ephemeral=True
+            f"Anuncio enviado en {channel.mention}, rol otorgado y DM enviado.", ephemeral=True
         )
 
     @promote.error
@@ -121,10 +141,10 @@ class StaffUpdates(commands.Cog):
         else:
             raise error
 
-    @app_commands.command(name="demote", description="Anuncia que un usuario bajo de cargo")
-    @app_commands.describe(user="Usuario que bajo de cargo", rank="Nombre del nuevo cargo o rango")
+    @app_commands.command(name="demote", description="Anuncia que un usuario bajo de cargo y le retira el rol")
+    @app_commands.describe(user="Usuario que bajo de cargo", rank="Rol del cargo que se le retirara al usuario")
     @app_commands.checks.has_permissions(manage_roles=True)
-    async def demote(self, interaction: discord.Interaction, user: discord.Member, rank: str):
+    async def demote(self, interaction: discord.Interaction, user: discord.Member, rank: discord.Role):
         channel_id = get_staff_channel(interaction.guild.id)
 
         if channel_id is None:
@@ -142,6 +162,16 @@ class StaffUpdates(commands.Cog):
             )
             return
 
+        try:
+            await user.remove_roles(rank, reason=f"Descenso aplicado por {interaction.user}")
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "No tengo permisos para retirar ese rol. Verifica que mi rol este por encima de "
+                f"{rank.mention} en la jerarquia del servidor.",
+                ephemeral=True,
+            )
+            return
+
         embed = discord.Embed(
             title="📉 Descenso de Staff",
             description=(
@@ -154,7 +184,7 @@ class StaffUpdates(commands.Cog):
         embed.set_author(name=str(user), icon_url=user.display_avatar.url)
         embed.set_thumbnail(url=user.display_avatar.url)
         embed.add_field(name="👤 Usuario", value=user.mention, inline=True)
-        embed.add_field(name="📋 Nuevo cargo", value=f"**{rank}**", inline=True)
+        embed.add_field(name="📋 Cargo retirado", value=rank.mention, inline=True)
         embed.add_field(name="🛡️ Actualizado por", value=interaction.user.mention, inline=False)
         embed.set_footer(
             text=f"{interaction.guild.name} • Actualización de staff",
@@ -162,8 +192,19 @@ class StaffUpdates(commands.Cog):
         )
 
         await channel.send(embed=embed)
+
+        try:
+            dm_embed = discord.Embed(
+                title="📋 Actualización de tu cargo",
+                description=f"Has bajado del cargo de {rank.mention} en **{interaction.guild.name}**.",
+                color=discord.Color.dark_orange(),
+            )
+            await user.send(embed=dm_embed)
+        except discord.Forbidden:
+            pass
+
         await interaction.response.send_message(
-            f"Anuncio enviado en {channel.mention}.", ephemeral=True
+            f"Anuncio enviado en {channel.mention}, rol retirado y DM enviado.", ephemeral=True
         )
 
     @demote.error
