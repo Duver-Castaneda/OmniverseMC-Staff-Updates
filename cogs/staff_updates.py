@@ -83,13 +83,31 @@ class StaffUpdates(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="Ascenso de staff",
-            description=f"{user.mention} ha subido al cargo de **{rank}**.",
-            color=discord.Color.blurple(),
+            title="🎉 ¡Ascenso de Staff! 🎉",
+            description=(
+                f"### {user.mention} ha subido de cargo\n"
+                f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+            ),
+            color=discord.Color.gold(),
+            timestamp=discord.utils.utcnow(),
         )
-        embed.set_footer(text=f"Actualizado por {interaction.user}")
+        embed.set_author(name=str(user), icon_url=user.display_avatar.url)
+        embed.set_thumbnail(url=user.display_avatar.url)
+        embed.add_field(name="👤 Usuario", value=user.mention, inline=True)
+        embed.add_field(name="🏆 Nuevo cargo", value=f"**{rank}**", inline=True)
+        embed.add_field(name="🛡️ Actualizado por", value=interaction.user.mention, inline=False)
+        embed.set_footer(
+            text=f"{interaction.guild.name} • Felicidades por el ascenso",
+            icon_url=interaction.guild.icon.url if interaction.guild.icon else None,
+        )
 
-        await channel.send(embed=embed)
+        anuncio = await channel.send(content=f"🎉 {user.mention}", embed=embed)
+        try:
+            await anuncio.add_reaction("🎉")
+            await anuncio.add_reaction("🏆")
+        except discord.HTTPException:
+            pass
+
         await interaction.response.send_message(
             f"Anuncio enviado en {channel.mention}.", ephemeral=True
         )
@@ -125,11 +143,23 @@ class StaffUpdates(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="Descenso de staff",
-            description=f"{user.mention} ha bajado al cargo de **{rank}**.",
-            color=discord.Color.orange(),
+            title="📉 Descenso de Staff",
+            description=(
+                f"### {user.mention} ha bajado de cargo\n"
+                f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+            ),
+            color=discord.Color.dark_orange(),
+            timestamp=discord.utils.utcnow(),
         )
-        embed.set_footer(text=f"Actualizado por {interaction.user}")
+        embed.set_author(name=str(user), icon_url=user.display_avatar.url)
+        embed.set_thumbnail(url=user.display_avatar.url)
+        embed.add_field(name="👤 Usuario", value=user.mention, inline=True)
+        embed.add_field(name="📋 Nuevo cargo", value=f"**{rank}**", inline=True)
+        embed.add_field(name="🛡️ Actualizado por", value=interaction.user.mention, inline=False)
+        embed.set_footer(
+            text=f"{interaction.guild.name} • Actualización de staff",
+            icon_url=interaction.guild.icon.url if interaction.guild.icon else None,
+        )
 
         await channel.send(embed=embed)
         await interaction.response.send_message(
