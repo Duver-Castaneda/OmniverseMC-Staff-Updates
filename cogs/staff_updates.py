@@ -148,17 +148,26 @@ class StaffUpdates(commands.Cog):
         etiqueta_es = "Ascenso" if accion == "Promote" else "Descenso"
         color = discord.Color.from_rgb(230, 70, 45)
 
-        # ---------- Mensaje en el canal (embed) ----------
+        # ---------- Mensaje en el canal (embed, con campos separados para que se vea mas largo) ----------
         embed = discord.Embed(
             title="📣 STAFF UPDATE",
-            description=(
-                f"{EMOJI_STAFF_CANAL} **STAFF:** {user.mention}\n\n"
-                f"`{old_rank.name}` > `{new_rank.name}`\n\n"
-                f"{EMOJI_MOTIVO_CANAL} **Motivo:** {accion}\n\n"
-                f"{EMOJI_RESPONSABLE_CANAL} **Responsable:** {interaction.user}"
-            ),
             color=color,
             timestamp=discord.utils.utcnow(),
+        )
+        embed.add_field(
+            name=f"{EMOJI_STAFF_CANAL} STAFF",
+            value=f"{user.mention}\n\n`{old_rank.name}` > `{new_rank.name}`",
+            inline=False,
+        )
+        embed.add_field(
+            name=f"{EMOJI_MOTIVO_CANAL} Motivo",
+            value=accion,
+            inline=False,
+        )
+        embed.add_field(
+            name=f"{EMOJI_RESPONSABLE_CANAL} Responsable",
+            value=str(interaction.user),
+            inline=False,
         )
         await channel.send(embed=embed)
 
@@ -167,6 +176,7 @@ class StaffUpdates(commands.Cog):
             f"{EMOJI_STAFF_MD} **Cargo Actualizado**\n"
             f"> Tu cargo como miembro del staff de **{interaction.guild.name}** ha sido "
             f"actualizado correctamente.\n"
+            f"\n"
             f" {EMOJI_INFO_MD} __**Información**__\n"
             f"> » {old_rank.name} > {new_rank.name} ({etiqueta_es})\n"
             f"> » Encargado: {interaction.user.mention}"
