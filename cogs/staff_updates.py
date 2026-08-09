@@ -38,13 +38,14 @@ def get_staff_channel(guild_id: int):
 def puede_gestionar_rol(actor: discord.Member, rank: discord.Role) -> bool:
     """
     Verifica si 'actor' tiene jerarquia suficiente para otorgar o retirar 'rank'.
-    El dueno del servidor y los administradores siempre pueden.
-    Cualquier otro usuario necesita que su rol mas alto este ESTRICTAMENTE por
-    encima del rol que intenta gestionar (no se permite igual ni menor).
+    Solo el dueno del servidor se salta esta verificacion.
+    Cualquier otro usuario (incluso con permiso de Administrator) necesita que
+    su rol mas alto este ESTRICTAMENTE por encima del rol que intenta gestionar
+    (no se permite igual ni menor). Esto evita que dos roles con permiso de
+    Administrator (por ejemplo Dev y Admin) se puedan gestionar entre si sin
+    importar cual este mas arriba en la jerarquia real del servidor.
     """
     if actor.id == actor.guild.owner_id:
-        return True
-    if actor.guild_permissions.administrator:
         return True
     return actor.top_role.position > rank.position
 
@@ -163,10 +164,20 @@ class StaffUpdates(commands.Cog):
         else:
             raise error
 
-    @app_commands.command(name="demote", description="Anuncia que un usuario bajo de cargo y le retira el rol")
-    @app_commands.describe(user="Usuario que bajo de cargo", rank="Rol del cargo que se le retirara al usuario")
+    @app_commands.command(name="demote", description="Anuncia que un usuario bajo de cargo, le retira el rol anterior y le da el nuevo")
+    @app_commands.describe(
+        user="Usuario que bajo de cargo",
+        rank="Rol del cargo que se le retirara al usuario",
+        new_rank="Rol del nuevo cargo (mas bajo) al que pasara el usuario",
+    )
     @app_commands.checks.has_permissions(manage_roles=True)
-    async def demote(self, interaction: discord.Interaction, user: discord.Member, rank: discord.Role):
+    async def demote(
+        self,
+        interaction: discord.Interaction,
+        user: discord.Member,
+        rank: discord.Role,
+        new_rank: discord.Role,
+    ):
         channel_id = get_staff_channel(interaction.guild.id)
 
         if channel_id is None:
@@ -192,12 +203,21 @@ class StaffUpdates(commands.Cog):
             )
             return
 
+        if not puede_gestionar_rol(interaction.user, new_rank):
+            await interaction.response.send_message(
+                f"No puedes otorgar el rol {new_rank.mention} porque esta al mismo nivel o por "
+                "encima de tu rol mas alto.",
+                ephemeral=True,
+            )
+            return
+
         try:
             await user.remove_roles(rank, reason=f"Descenso aplicado por {interaction.user}")
+            await user.add_roles(new_rank, reason=f"Descenso aplicado por {interaction.user}")
         except discord.Forbidden:
             await interaction.response.send_message(
-                "No tengo permisos para retirar ese rol. Verifica que mi rol este por encima de "
-                f"{rank.mention} en la jerarquia del servidor.",
+                "No tengo permisos para gestionar esos roles. Verifica que mi rol este por encima "
+                f"de {rank.mention} y {new_rank.mention} en la jerarquia del servidor.",
                 ephemeral=True,
             )
             return
@@ -214,7 +234,8 @@ class StaffUpdates(commands.Cog):
         embed.set_author(name=str(user), icon_url=user.display_avatar.url)
         embed.set_thumbnail(url=user.display_avatar.url)
         embed.add_field(name="👤 Usuario", value=user.mention, inline=True)
-        embed.add_field(name="📋 Cargo retirado", value=rank.mention, inline=True)
+        embed.add_field(name="📤 Cargo anterior", value=rank.mention, inline=True)
+        embed.add_field(name="📥 Nuevo cargo", value=new_rank.mention, inline=True)
         embed.add_field(name="🛡️ Actualizado por", value=interaction.user.mention, inline=False)
         embed.set_footer(
             text=f"{interaction.guild.name} • Actualización de staff",
@@ -226,7 +247,10 @@ class StaffUpdates(commands.Cog):
         try:
             dm_embed = discord.Embed(
                 title="📋 Actualización de tu cargo",
-                description=f"Has bajado del cargo de {rank.mention} en **{interaction.guild.name}**.",
+                description=(
+                    f"Has bajado de {rank.mention} a {new_rank.mention} en "
+                    f"**{interaction.guild.name}**."
+                ),
                 color=discord.Color.dark_orange(),
             )
             await user.send(embed=dm_embed)
@@ -234,7 +258,7 @@ class StaffUpdates(commands.Cog):
             pass
 
         await interaction.response.send_message(
-            f"Anuncio enviado en {channel.mention}, rol retirado y DM enviado.", ephemeral=True
+            f"Anuncio enviado en {channel.mention}, roles actualizados y DM enviado.", ephemeral=True
         )
 
     @demote.error
