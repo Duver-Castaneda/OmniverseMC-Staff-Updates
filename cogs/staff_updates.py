@@ -150,7 +150,7 @@ class StaffUpdates(commands.Cog):
 
         # ---------- Mensaje en el canal (embed, con campos separados para que se vea mas largo) ----------
         embed = discord.Embed(
-            title="📣 STAFF UPDATE",
+            title="# 📣 STAFF UPDATE",
             color=color,
             timestamp=discord.utils.utcnow(),
         )
