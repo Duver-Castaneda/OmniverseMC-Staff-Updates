@@ -136,13 +136,59 @@ class StaffUpdates(commands.Cog):
             )
             return
 
+        if old_rank.id == new_rank.id:
+            await interaction.response.send_message(
+                "El rol anterior y el rol nuevo no pueden ser el mismo.",
+                ephemeral=True,
+            )
+            return
+
+        if old_rank not in user.roles:
+            await interaction.response.send_message(
+                f"{user.mention} no tiene actualmente el rol {old_rank.mention}, no se puede "
+                "procesar este cambio.",
+                ephemeral=True,
+            )
+            return
+
+        if accion == "Promote" and new_rank.position <= old_rank.position:
+            await interaction.response.send_message(
+                f"{new_rank.mention} no esta por encima de {old_rank.mention}. Para un ascenso el "
+                "rol nuevo debe ser superior al anterior.",
+                ephemeral=True,
+            )
+            return
+
+        if accion == "Demote" and new_rank.position >= old_rank.position:
+            await interaction.response.send_message(
+                f"{new_rank.mention} no esta por debajo de {old_rank.mention}. Para un descenso el "
+                "rol nuevo debe ser inferior al anterior.",
+                ephemeral=True,
+            )
+            return
+
         try:
             await user.remove_roles(old_rank, reason=f"{accion} aplicado por {interaction.user}")
-            await user.add_roles(new_rank, reason=f"{accion} aplicado por {interaction.user}")
-        except discord.Forbidden:
+        except discord.HTTPException:
             await interaction.response.send_message(
-                "No tengo permisos para gestionar esos roles. Verifica que mi rol este por encima "
-                f"de {old_rank.mention} y {new_rank.mention} en la jerarquia del servidor.",
+                "No pude retirar el rol anterior. Verifica que mi rol este por encima de "
+                f"{old_rank.mention} en la jerarquia del servidor.",
+                ephemeral=True,
+            )
+            return
+
+        try:
+            await user.add_roles(new_rank, reason=f"{accion} aplicado por {interaction.user}")
+        except discord.HTTPException:
+            # El retiro del rol anterior ya se aplico: revertimos para no dejar
+            # al usuario sin ningun rol de staff.
+            try:
+                await user.add_roles(old_rank, reason="Rollback automatico tras fallo al otorgar el nuevo rol")
+            except discord.HTTPException:
+                pass
+            await interaction.response.send_message(
+                "No pude otorgar el rol nuevo, asi que reverti el cambio. Verifica que mi rol este "
+                f"por encima de {new_rank.mention} en la jerarquia del servidor.",
                 ephemeral=True,
             )
             return
@@ -234,9 +280,16 @@ class StaffUpdates(commands.Cog):
             )
             return
 
+        if user.get_role(new_rank.id) is not None:
+            await interaction.response.send_message(
+                f"{user.mention} ya tiene el rol {new_rank.mention}.",
+                ephemeral=True,
+            )
+            return
+
         try:
             await user.add_roles(new_rank, reason=f"Ingreso aplicado por {interaction.user}")
-        except discord.Forbidden:
+        except discord.HTTPException:
             await interaction.response.send_message(
                 "No tengo permisos para gestionar ese rol. Verifica que mi rol este por encima "
                 f"de {new_rank.mention} en la jerarquia del servidor.",
