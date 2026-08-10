@@ -164,7 +164,7 @@ class StaffUpdates(commands.Cog):
             inline=False,
         )
         embed.add_field(
-            name=f"{EMOJI_MOTIVO_CANAL} Motivo",
+            name=f"{EMOJI_MOTIVO_CANAL} Ingreso",
             value=accion,
             inline=False,
         )
