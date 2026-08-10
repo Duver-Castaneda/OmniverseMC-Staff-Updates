@@ -249,11 +249,13 @@ class StaffUpdates(commands.Cog):
         interaction: discord.Interaction,
         user: discord.Member,
         new_rank: discord.Role,
+        rank_ingreso: str,
     ):
         """
         Logica para /ingreso. A diferencia de /promote y /demote, aqui no hay
         old_rank que retirar: el usuario es nuevo en el staff y solo se le
-        otorga new_rank.
+        otorga new_rank. rank_ingreso es el texto que se muestra como "rol
+        anterior" en el embed (por defecto "User").
         """
         channel_id = get_staff_channel(interaction.guild.id)
 
@@ -307,7 +309,7 @@ class StaffUpdates(commands.Cog):
         )
         embed.add_field(
             name=f"{EMOJI_STAFF_CANAL} STAFF",
-            value=f"{user.mention}\n\n`User` > `{new_rank.name}`",
+            value=f"{user.mention}\n\n`{rank_ingreso}` > `{new_rank.name}`",
             inline=False,
         )
         embed.add_field(
@@ -331,7 +333,7 @@ class StaffUpdates(commands.Cog):
                 f"\n"
                 f"{EMOJI_INFO_MD} __**Información**__\n"
                 f"\n"
-                f"> » `Cargo de ingreso` > `{new_rank.name}`\n"
+                f"> » `{rank_ingreso}` > `{new_rank.name}`\n"
                 f"> » {EMOJI_HIGH_MD} Encargado: {interaction.user.mention}"
             ),
             color=color,
@@ -349,6 +351,7 @@ class StaffUpdates(commands.Cog):
     @app_commands.describe(
         user="Usuario que ingresa al staff",
         new_rank="Rol que se le otorgara",
+        rank_ingreso="Texto a mostrar como rol anterior (por defecto: 'User')",
     )
     @app_commands.checks.has_permissions(manage_roles=True)
     async def ingreso(
@@ -356,8 +359,9 @@ class StaffUpdates(commands.Cog):
         interaction: discord.Interaction,
         user: discord.Member,
         new_rank: discord.Role,
+        rank_ingreso: str = "User",
     ):
-        await self._procesar_ingreso(interaction, user, new_rank)
+        await self._procesar_ingreso(interaction, user, new_rank, rank_ingreso)
 
     @ingreso.error
     async def ingreso_error(self, interaction: discord.Interaction, error):
