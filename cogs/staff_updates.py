@@ -164,7 +164,7 @@ class StaffUpdates(commands.Cog):
             inline=False,
         )
         embed.add_field(
-            name=f"{EMOJI_MOTIVO_CANAL} Ingreso",
+            name=f"{EMOJI_MOTIVO_CANAL} Motivo",
             value=accion,
             inline=False,
         )
@@ -197,6 +197,123 @@ class StaffUpdates(commands.Cog):
         await interaction.response.send_message(
             f"Anuncio enviado en {channel.mention}, roles actualizados y MD enviado.", ephemeral=True
         )
+
+    async def _procesar_ingreso(
+        self,
+        interaction: discord.Interaction,
+        user: discord.Member,
+        new_rank: discord.Role,
+    ):
+        """
+        Logica para /ingreso. A diferencia de /promote y /demote, aqui no hay
+        old_rank que retirar: el usuario es nuevo en el staff y solo se le
+        otorga new_rank.
+        """
+        channel_id = get_staff_channel(interaction.guild.id)
+
+        if channel_id is None:
+            await interaction.response.send_message(
+                "Aun no se ha configurado el canal de staff. Usa /set-staff-channel primero.",
+                ephemeral=True,
+            )
+            return
+
+        channel = interaction.guild.get_channel(channel_id)
+        if channel is None:
+            await interaction.response.send_message(
+                "El canal configurado ya no existe. Vuelve a configurarlo con /set-staff-channel.",
+                ephemeral=True,
+            )
+            return
+
+        if not puede_gestionar_rol(interaction.user, new_rank):
+            await interaction.response.send_message(
+                f"No puedes otorgar el rol {new_rank.mention} porque esta al mismo nivel o por "
+                "encima de tu rol mas alto.",
+                ephemeral=True,
+            )
+            return
+
+        try:
+            await user.add_roles(new_rank, reason=f"Ingreso aplicado por {interaction.user}")
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "No tengo permisos para gestionar ese rol. Verifica que mi rol este por encima "
+                f"de {new_rank.mention} en la jerarquia del servidor.",
+                ephemeral=True,
+            )
+            return
+
+        color = discord.Color.from_rgb(230, 70, 45)
+
+        # ---------- Mensaje en el canal (embed, con campos separados para que se vea mas largo) ----------
+        embed = discord.Embed(
+            description="# 📣 STAFF UPDATE",
+            color=color,
+            timestamp=discord.utils.utcnow(),
+        )
+        embed.add_field(
+            name=f"{EMOJI_STAFF_CANAL} STAFF",
+            value=f"{user.mention}\n\n`{new_rank.name}`",
+            inline=False,
+        )
+        embed.add_field(
+            name=f"{EMOJI_MOTIVO_CANAL} Motivo",
+            value="Ingreso",
+            inline=False,
+        )
+        embed.add_field(
+            name=f"{EMOJI_RESPONSABLE_CANAL} Responsable",
+            value=str(interaction.user),
+            inline=False,
+        )
+        await channel.send(embed=embed)
+
+        # ---------- Mensaje directo (como embed, mismo contenido y espacios) ----------
+        dm_embed = discord.Embed(
+            title=f"{EMOJI_STAFF_MD} Cargo Actualizado",
+            description=(
+                f"> Tu cargo como miembro del staff de **{interaction.guild.name}** ha sido "
+                f"actualizado correctamente.\n"
+                f"\n"
+                f"{EMOJI_INFO_MD} __**Información**__\n"
+                f"\n"
+                f"> » `{new_rank.name}` (Ingreso)\n"
+                f"> » {EMOJI_HIGH_MD} Encargado: {interaction.user.mention}"
+            ),
+            color=color,
+        )
+        try:
+            await user.send(embed=dm_embed)
+        except discord.Forbidden:
+            pass
+
+        await interaction.response.send_message(
+            f"Anuncio enviado en {channel.mention}, rol otorgado y MD enviado.", ephemeral=True
+        )
+
+    @app_commands.command(name="ingreso", description="Anuncia el ingreso de un nuevo miembro al staff y le otorga su rol")
+    @app_commands.describe(
+        user="Usuario que ingresa al staff",
+        new_rank="Rol que se le otorgara",
+    )
+    @app_commands.checks.has_permissions(manage_roles=True)
+    async def ingreso(
+        self,
+        interaction: discord.Interaction,
+        user: discord.Member,
+        new_rank: discord.Role,
+    ):
+        await self._procesar_ingreso(interaction, user, new_rank)
+
+    @ingreso.error
+    async def ingreso_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, app_commands.MissingPermissions):
+            await interaction.response.send_message(
+                "No tienes permisos para usar este comando.", ephemeral=True
+            )
+        else:
+            raise error
 
     @app_commands.command(name="promote", description="Anuncia que un usuario subio de cargo y actualiza sus roles")
     @app_commands.describe(
