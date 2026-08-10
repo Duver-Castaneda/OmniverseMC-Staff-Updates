@@ -254,7 +254,7 @@ class StaffUpdates(commands.Cog):
         )
         embed.add_field(
             name=f"{EMOJI_STAFF_CANAL} STAFF",
-            value=f"{user.mention}\n\n`{new_rank.name}`",
+            value=f"{user.mention}\n\n`Cargo de ingreso` > `{new_rank.name}`",
             inline=False,
         )
         embed.add_field(
@@ -278,7 +278,7 @@ class StaffUpdates(commands.Cog):
                 f"\n"
                 f"{EMOJI_INFO_MD} __**Información**__\n"
                 f"\n"
-                f"> » `{new_rank.name}` (Ingreso)\n"
+                f"> » `Cargo de ingreso` > `{new_rank.name}`\n"
                 f"> » {EMOJI_HIGH_MD} Encargado: {interaction.user.mention}"
             ),
             color=color,
