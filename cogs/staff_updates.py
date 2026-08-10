@@ -7,19 +7,20 @@ from discord.ext import commands
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "staff_channels.json")
 
-# Emojis del embed que se envia en el canal de staff.
-# :user:, :modmail: y :adm: no rendeaban en tu captura (aparecian como texto),
-# asi que aqui van con emojis normales de Discord como reemplazo.
-# Si tienes los codigos reales de tus emojis personalizados (formato <:nombre:id>),
-# reemplaza estos 3 valores por esos codigos.
-EMOJI_STAFF_CANAL = "👥"
-EMOJI_MOTIVO_CANAL = "📋"
-EMOJI_RESPONSABLE_CANAL = "🛡️"
+# Emojis usados tanto en el embed del canal como en el mensaje directo (MD).
+EMOJI_STAFF = "<:staff:1536149244271001602>"
+EMOJI_INFO = "<:info:1536150266926334022>"
+EMOJI_HIGH = "<:High:1534591103037345904>"
 
-# Emojis del mensaje directo (MD). Estos si son tus codigos reales.
-EMOJI_STAFF_MD = "<:staff:1536149244271001602>"
-EMOJI_INFO_MD = "<:info:1536150266926334022>"
-EMOJI_HIGH_MD = "<:High:1534591103037345904>"
+# Alias para el embed del canal (misma referencia, distinto nombre por claridad)
+EMOJI_STAFF_CANAL = EMOJI_STAFF
+EMOJI_MOTIVO_CANAL = EMOJI_INFO
+EMOJI_RESPONSABLE_CANAL = EMOJI_HIGH
+
+# Alias para el mensaje directo (MD)
+EMOJI_STAFF_MD = EMOJI_STAFF
+EMOJI_INFO_MD = EMOJI_INFO
+EMOJI_HIGH_MD = EMOJI_HIGH
 
 
 def _cargar_config():
