@@ -254,7 +254,7 @@ class StaffUpdates(commands.Cog):
         )
         embed.add_field(
             name=f"{EMOJI_STAFF_CANAL} STAFF",
-            value=f"{user.mention}\n\n`user` > `{new_rank.name}`",
+            value=f"{user.mention}\n\n`User` > `{new_rank.name}`",
             inline=False,
         )
         embed.add_field(
