@@ -181,7 +181,8 @@ class StaffUpdates(commands.Cog):
                 f"> Tu cargo como miembro del staff de **{interaction.guild.name}** ha sido "
                 f"actualizado correctamente.\n"
                 f"\n"
-                f" {EMOJI_INFO_MD} __**Información**__\n"
+                f"{EMOJI_INFO_MD} __**Información**__\n"
+                f"\n"
                 f"> » `{old_rank.name}` > `{new_rank.name}` ({etiqueta_es})\n"
                 f"> » {EMOJI_HIGH_MD} Encargado: {interaction.user.mention}"
             ),
