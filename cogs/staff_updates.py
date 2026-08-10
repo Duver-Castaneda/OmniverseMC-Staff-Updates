@@ -19,6 +19,7 @@ EMOJI_RESPONSABLE_CANAL = "🛡️"
 # Emojis del mensaje directo (MD). Estos si son tus codigos reales.
 EMOJI_STAFF_MD = "<:staff:1536149244271001602>"
 EMOJI_INFO_MD = "<:info:1536150266926334022>"
+EMOJI_HIGH_MD = "<:High:1534591103037345904>"
 
 
 def _cargar_config():
@@ -182,7 +183,7 @@ class StaffUpdates(commands.Cog):
                 f"\n"
                 f" {EMOJI_INFO_MD} __**Información**__\n"
                 f"> » `{old_rank.name}` > `{new_rank.name}` ({etiqueta_es})\n"
-                f"> » Encargado: {interaction.user.mention}"
+                f"> » {EMOJI_HIGH_MD} Encargado: {interaction.user.mention}"
             ),
             color=color,
         )
