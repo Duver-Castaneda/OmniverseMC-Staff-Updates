@@ -173,18 +173,21 @@ class StaffUpdates(commands.Cog):
         )
         await channel.send(embed=embed)
 
-        # ---------- Mensaje directo (sin embed) ----------
-        dm_texto = (
-            f"{EMOJI_STAFF_MD} **Cargo Actualizado**\n"
-            f"> Tu cargo como miembro del staff de **{interaction.guild.name}** ha sido "
-            f"actualizado correctamente.\n"
-            f"\n"
-            f" {EMOJI_INFO_MD} __**Información**__\n"
-            f"> » {old_rank.name} > {new_rank.name} ({etiqueta_es})\n"
-            f"> » Encargado: {interaction.user.mention}"
+        # ---------- Mensaje directo (como embed, mismo contenido y espacios) ----------
+        dm_embed = discord.Embed(
+            title=f"{EMOJI_STAFF_MD} Cargo Actualizado",
+            description=(
+                f"> Tu cargo como miembro del staff de **{interaction.guild.name}** ha sido "
+                f"actualizado correctamente.\n"
+                f"\n"
+                f" {EMOJI_INFO_MD} __**Información**__\n"
+                f"> » `{old_rank.name}` > `{new_rank.name}` ({etiqueta_es})\n"
+                f"> » Encargado: {interaction.user.mention}"
+            ),
+            color=color,
         )
         try:
-            await user.send(dm_texto)
+            await user.send(embed=dm_embed)
         except discord.Forbidden:
             pass
 
